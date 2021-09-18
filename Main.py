@@ -59,6 +59,7 @@ class Ui_MainWindow(object):
         self.info.setObjectName("info")
         self.procesar = QtWidgets.QPushButton(self.centralwidget)
         self.procesar.setGeometry(QtCore.QRect(40, 270, 111, 41))
+        self.procesar.clicked.connect(self.ProcesarSimulacion)
         font = QtGui.QFont()
         font.setFamily("Terminal")
         font.setPointSize(11)
@@ -151,13 +152,15 @@ class Ui_MainWindow(object):
             Productos=x[1].text
             self.ListaProductos.Añadir(Nombre,Productos)
             c=""
+            con=0
             for x in range(len(Productos)):
                 if Productos[x]==" ":
                     continue
                 c+=Productos[x]
                 if len(c)==4:
-                    self.ListaProductos.AñadirPiezas(Nombre,c[1],c[3],c)
+                    self.ListaProductos.AñadirPiezas(Nombre,c[1],con,c,c[3])
                     c=""
+                    con+=1
                 
         self.ListaLineas.MostrarDatos()
         self.ListaProductos.MostrarDatos()
@@ -167,19 +170,25 @@ class Ui_MainWindow(object):
         mytree = ET.parse(buscar[0])
         myroot = mytree.getroot()
         nombreSimulacion=myroot[0].text
+        self.cmbProducto.addItem(nombreSimulacion)
         for x in myroot[1].findall('Producto'):
             nombreP=x.text
             aux=self.ListaProductos.obtener(nombreP)
             if aux.nombre==nombreP:
-                self.ListaProductosLinea.AñadirNodo(aux)
-                self.ListaSimulaciones.Añadir(nombreSimulacion,nombreP)
+                self.ListaSimulaciones.Añadir(nombreSimulacion,aux)
             else:
                 msg=QMessageBox()
                 msg.setWindowTitle("OCURRIO UN ERROR")
-                msg.setText(nombreP+"No existe en los registros")
+                msg.setText(nombreP+" no existe en los registros")
                 msg.setIcon(QMessageBox.Warning)
                 x=msg.exec_()
                 
+    def ProcesarSimulacion(self):
+        nombre=self.cmbProducto.currentText()
+        #aux=self.ListaProductos.obtener()
+        self.ListaSimulaciones.Procesar(nombre,self.ListaLineas.size,self.ListaLineas)
+        self.ListaSimulaciones.Mostrar()
+
 
 if __name__ == "__main__":
     import sys

@@ -4,17 +4,31 @@ class bases:
         self.Next=None
 
 class Acciones:
-    def __init__(self, valor,Tiempo):
-        self.componente=valor
+    def __init__(self,Linea ,Tiempo,Descripcion,nombreProd):
+        self.Linea=Linea
+        self.Descripcion=Descripcion
         self.Tiempo=Tiempo
+        self.nombreProd=nombreProd
         self.Next=None
 
+
+class Pieza:
+    def __init__(self,Linea,Id,nombre,numero):
+        self.nombre=nombre
+        self.Linea=Linea
+        self.Id=Id
+        self.Numero=numero
+        self.Next=None
+        self.Anterior=None
+        self.Armado=False
+
+
 class Simulacion:
-    def __init__(self,nombre,NombreProd):
-        self.NombreProd=NombreProd
+    def __init__(self,nombre,producto):
+        self.producto=producto
         self.nombre=nombre
         self.TiempoRealizado=0
-        self.NodoAccion=None         #Nodo que conectara con las piezas de armado
+        self.NodoAccion=None         #Nodo que conectara con las instrucciones de armado
         self.Next=None
 
 
@@ -27,6 +41,7 @@ class Lineas:
         self.NodoArmado=None
         self.Posicion=0
         self.Next=None
+        self.Anterior=None
         self.Tiempo=0
 
 
@@ -39,10 +54,3 @@ class producto:
         self.Next=None
 
 
-class Pieza:
-    def __init__(self,Linea,Id,nombre):
-        self.nombre=nombre
-        self.Linea=Linea
-        self.Id=Id
-        self.Next=None
-        self.Armad=False
