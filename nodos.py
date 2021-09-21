@@ -28,6 +28,7 @@ class Simulacion:
         self.producto=producto
         self.nombre=nombre
         self.TiempoRealizado=0
+        self.Procesado=False
         self.NodoAccion=None         #Nodo que conectara con las instrucciones de armado
         self.Next=None
 

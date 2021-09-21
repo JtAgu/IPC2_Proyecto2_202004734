@@ -1,6 +1,9 @@
+from os import name
 from nodos import Acciones, bases
 from nodos import Lineas
 from nodos import producto, Pieza,Simulacion
+import xml.etree.cElementTree as ET
+
 
 class ListaDatos:
     def __init__(self):
@@ -27,6 +30,7 @@ class ListaLineas:
     def __init__(self):
         self.First=None
         self.size=0
+        self.Last=None
 
     def Añadir(self,Id,NumCompo,TiempoE):
         if self.size==0:
@@ -38,6 +42,7 @@ class ListaLineas:
                 aux=aux.Next
             nodo=Lineas(Id,NumCompo,TiempoE)
             aux.Next=nodo
+            self.Last=nodo
             nodo.Anterior=aux
             self.size+=1
 
@@ -192,7 +197,7 @@ class ListaSimulaciones:
                         
                     elif int(lineActual.Posicion)>int(a.Numero):
                         lineActual.Posicion=int(lineActual.Posicion)-1
-                        instruccion="Movimiento hacia componente "+str(lineActual.Posicion)
+                        instruccion="Movimiento posicion "+str(lineActual.Posicion)
                         nodo=Acciones(a.Linea,t,instruccion,NombreProd)
                         Lista.Añadir(nodo)
                         if t==aux.TiempoRealizado:
@@ -255,11 +260,69 @@ class ListaSimulaciones:
                     Lista.Añadir(nodo)
                     conteo+=1
                 relleno=relleno.Next
-
-                
-                    
-                
+            aux.TiempoRealizado=t-1
+            aux.Procesado=True
             aux=aux.Next
+        
+        aux=self.First
+        while aux:
+            a=aux.NodoAccion
+            componer=0
+            while a:
+                componer+=1
+                a=a.Next
+            aux.TiempoRealizado=componer//ListaLineas.size
+            aux=aux.Next
+
+
+    def Obtener(self,nombreProd,nombreSim):
+        aux=self.First
+        while aux:
+            if aux.nombre==nombreSim:
+                if aux.producto.nombre==nombreProd:
+                    return aux
+            aux=aux.Next
+        return aux
+
+
+    def imprimirXML(self, nombre):
+        aux=self.First  
+        
+        if 1==1:
+            #ruut=ET.Element("SalidaSimulacion ",name=nombre)
+            ruut=ET.Element("SalidaSimulacion")
+            Name=ET.SubElement(ruut,"Nombre").text=nombre
+            Listado=ET.SubElement(ruut,"ListadoProductos")
+            while aux:
+                if aux.nombre==nombre:
+                    ET.SubElement(Listado,"Nombre").text=aux.producto.nombre
+                    Tiempo=ET.SubElement(Listado,"TiempoTotal")
+                    Tiempo.text=str(aux.TiempoRealizado)
+                    
+                    Elaboracion=ET.SubElement(Listado,"ElaboracionOptima")
+                    l="1"
+                    while int(l)<=aux.TiempoRealizado:
+                        a=aux.NodoAccion
+                        T=ET.SubElement(Elaboracion,"Tiempo",NoSegundo=""+str(l))
+                        while a:
+                            print("Esto es  L:"+str(l))
+                            if a.Tiempo==int(l):
+                                print("Esto es tiempo: "+str(a.Tiempo))
+                                ET.SubElement(T,"LineaEnsamblaje",NoLinea=""+str(a.Linea)).text=a.Descripcion
+                            a=a.Next
+                        l=int(l)+1
+                aux=aux.Next
+
+            arbol=ET.ElementTree(ruut)
+            try:
+                arbol.write(nombre+".xml")
+                print("ARCHIVO XML GENERADO")
+            except IOError as exc:
+                print(exc)
+
+        else:
+            print("No ha seleccionado un terreno analizado...")
+            
     
     def Mostrar(self):
         aux=self.First

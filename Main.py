@@ -10,7 +10,10 @@
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 import xml.etree.ElementTree as ET
-from PyQt5.QtWidgets import QFileDialog, QMessageBox
+from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import (QFileDialog, QMessageBox, QApplication, QDialog, QPushButton, QTableWidget,
+                             QTableWidgetItem, QAbstractItemView, QHeaderView, QMenu,
+                             QActionGroup, QAction)
 from Listas import ListaLineas,ListaProductos,ListaDatos,ListaSimulaciones
 from nodos import Pieza
 import copy
@@ -23,7 +26,7 @@ class Ui_MainWindow(object):
         self.ListaProductosLinea=ListaProductos()
         self.ListaSimulaciones=ListaSimulaciones()
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(800, 524)
+        MainWindow.resize(800, 575)
         MainWindow.setLayoutDirection(QtCore.Qt.RightToLeft)
         MainWindow.setStyleSheet("")
         self.centralwidget = QtWidgets.QWidget(MainWindow)
@@ -36,40 +39,70 @@ class Ui_MainWindow(object):
         font.setPointSize(11)
         self.archivo.setFont(font)
         self.archivo.setObjectName("archivo")
-        self.tbTerreno = QtWidgets.QTableView(self.centralwidget)
-        self.tbTerreno.setGeometry(QtCore.QRect(310, 50, 461, 421))
+        self.tbTerreno = QtWidgets.QTableWidget(self.centralwidget)
+        self.tbTerreno.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        self.tbTerreno.setDragDropOverwriteMode(False)
+        self.tbTerreno.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.tbTerreno.setSelectionMode(QAbstractItemView.SingleSelection)
+        self.tbTerreno.setSortingEnabled(False)
+        self.tbTerreno.verticalHeader().setDefaultSectionSize(25)
+        self.tbTerreno.setAlternatingRowColors(True)
+        self.tbTerreno.horizontalHeader().setDefaultAlignment(Qt.AlignHCenter|Qt.AlignVCenter|Qt.AlignCenter)
+        
+        
+        self.tbTerreno.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.tbTerreno.setWordWrap(False)
+
+        self.tbTerreno.setGeometry(QtCore.QRect(310, 50, 460, 451))
         font = QtGui.QFont()
         font.setFamily("Terminal")
         font.setPointSize(10)
         self.tbTerreno.setFont(font)
         self.tbTerreno.setObjectName("tbTerreno")
         self.Reporte = QtWidgets.QPushButton(self.centralwidget)
-        self.Reporte.setGeometry(QtCore.QRect(170, 270, 111, 41))
+        self.Reporte.clicked.connect(self.Reportar)
+        self.Reporte.setGeometry(QtCore.QRect(160, 240, 111, 41))
         font = QtGui.QFont()
         font.setFamily("Terminal")
         font.setPointSize(11)
         self.Reporte.setFont(font)
         self.Reporte.setObjectName("Reporte")
         self.info = QtWidgets.QPushButton(self.centralwidget)
-        self.info.setGeometry(QtCore.QRect(40, 320, 241, 41))
+        self.info.setGeometry(QtCore.QRect(40, 390, 241, 41))
         font = QtGui.QFont()
         font.setFamily("Terminal")
         font.setPointSize(11)
         self.info.setFont(font)
         self.info.setObjectName("info")
+        self.info.clicked.connect(self.VerInfo)
+        self.info.setEnabled(False)
+
+
+        self.imagen = QtWidgets.QPushButton(self.centralwidget)
+        self.imagen.setGeometry(QtCore.QRect(40, 440, 241, 41))
+        self.imagen.setEnabled(False)
+        font = QtGui.QFont()
+        font.setFamily("Terminal")
+        font.setPointSize(11)
+        self.imagen.setFont(font)
+        self.imagen.setObjectName("imagen")
+        self.imagen.clicked.connect(self.Imagen)
+
         self.procesar = QtWidgets.QPushButton(self.centralwidget)
-        self.procesar.setGeometry(QtCore.QRect(40, 270, 111, 41))
+        self.procesar.setGeometry(QtCore.QRect(30, 240, 111, 41))
         self.procesar.clicked.connect(self.ProcesarSimulacion)
+        self.procesar.setEnabled(False)
         font = QtGui.QFont()
         font.setFamily("Terminal")
         font.setPointSize(11)
         self.procesar.setFont(font)
         self.procesar.setObjectName("procesar")
         self.cmbProducto = QtWidgets.QComboBox(self.centralwidget)
-        self.cmbProducto.setGeometry(QtCore.QRect(40, 210, 241, 31))
+        self.cmbProducto.setGeometry(QtCore.QRect(30, 200, 251, 31))
+        self.cmbProducto.activated.connect(self.InfoSimulacion)
         self.cmbProducto.setObjectName("cmbProducto")
         self.Tiempo = QtWidgets.QLabel(self.centralwidget)
-        self.Tiempo.setGeometry(QtCore.QRect(150, 420, 41, 31))
+        self.Tiempo.setGeometry(QtCore.QRect(150, 530, 41, 31))
         font = QtGui.QFont()
         font.setFamily("Terminal")
         font.setPointSize(11)
@@ -78,7 +111,7 @@ class Ui_MainWindow(object):
         self.Tiempo.setTextFormat(QtCore.Qt.PlainText)
         self.Tiempo.setObjectName("Tiempo")
         self.Tiempo_2 = QtWidgets.QLabel(self.centralwidget)
-        self.Tiempo_2.setGeometry(QtCore.QRect(40, 160, 251, 31))
+        self.Tiempo_2.setGeometry(QtCore.QRect(20, 160, 271, 31))
         font = QtGui.QFont()
         font.setFamily("Terminal")
         font.setPointSize(11)
@@ -87,7 +120,7 @@ class Ui_MainWindow(object):
         self.Tiempo_2.setTextFormat(QtCore.Qt.PlainText)
         self.Tiempo_2.setObjectName("Tiempo_2")
         self.Tiempo_3 = QtWidgets.QLabel(self.centralwidget)
-        self.Tiempo_3.setGeometry(QtCore.QRect(70, 390, 191, 31))
+        self.Tiempo_3.setGeometry(QtCore.QRect(70, 500, 191, 31))
         font = QtGui.QFont()
         font.setFamily("Terminal")
         font.setPointSize(11)
@@ -105,13 +138,29 @@ class Ui_MainWindow(object):
         self.Tiempo_4.setTextFormat(QtCore.Qt.PlainText)
         self.Tiempo_4.setObjectName("Tiempo_4")
         self.archivo_articulos = QtWidgets.QPushButton(self.centralwidget)
-        self.archivo_articulos.setGeometry(QtCore.QRect(30, 110, 251, 41))
+        self.archivo_articulos.setGeometry(QtCore.QRect(30, 100, 251, 41))
         self.archivo_articulos.clicked.connect(self.LeerSimulacion)
         font = QtGui.QFont()
         font.setFamily("Terminal")
         font.setPointSize(11)
         self.archivo_articulos.setFont(font)
         self.archivo_articulos.setObjectName("archivo_articulos")
+        self.Tiempo_5 = QtWidgets.QLabel(self.centralwidget)
+        self.Tiempo_5.setGeometry(QtCore.QRect(30, 300, 251, 31))
+        font = QtGui.QFont()
+        font.setFamily("Terminal")
+        font.setPointSize(11)
+        self.Tiempo_5.setFont(font)
+        self.Tiempo_5.setLayoutDirection(QtCore.Qt.RightToLeft)
+        self.Tiempo_5.setTextFormat(QtCore.Qt.PlainText)
+        self.Tiempo_5.setObjectName("Tiempo_5")
+        self.cmbProd = QtWidgets.QComboBox(self.centralwidget)
+        self.cmbProd.setFont(font)
+        self.cmbProd.activated.connect(self.Activar)
+        self.Reporte.setEnabled(False)
+        self.cmbProducto.setFont(font)
+        self.cmbProd.setGeometry(QtCore.QRect(30, 340, 251, 31))
+        self.cmbProd.setObjectName("cmbProd")
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 800, 21))
@@ -120,6 +169,7 @@ class Ui_MainWindow(object):
         self.statusbar = QtWidgets.QStatusBar(MainWindow)
         self.statusbar.setObjectName("statusbar")
         MainWindow.setStatusBar(self.statusbar)
+        
 
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
@@ -130,12 +180,25 @@ class Ui_MainWindow(object):
         self.archivo.setText(_translate("MainWindow", "ARCHIVO DE LINEAS"))
         self.Reporte.setText(_translate("MainWindow", "REPORTE"))
         self.info.setText(_translate("MainWindow", "VER INFORMACION"))
+        self.imagen.setText(_translate("MainWindow", "GENERAR IMAGEN"))
         self.procesar.setText(_translate("MainWindow", "PROCESAR"))
         self.Tiempo.setText(_translate("MainWindow", "0"))
-        self.Tiempo_2.setText(_translate("MainWindow", "seleccionar producto"))
+        self.Tiempo_2.setText(_translate("MainWindow", "seleccionar simulacion"))
         self.Tiempo_3.setText(_translate("MainWindow", "tiempo empleado:"))
         self.Tiempo_4.setText(_translate("MainWindow", "DESCRIPCION"))
         self.archivo_articulos.setText(_translate("MainWindow", "ARCHIVO DE ARTICULOS"))
+        self.Tiempo_5.setText(_translate("MainWindow", "seleccionar producto"))
+
+    def Activar(self):
+        nombreProd=self.cmbProd.currentText()
+        nombreSim=self.cmbProducto.currentText()
+        aux=self.ListaSimulaciones.Obtener(nombreProd,nombreSim)
+        if aux.Procesado==True:
+            self.info.setEnabled(True)
+            self.imagen.setEnabled(True)
+        else:
+            self.info.setEnabled(False)
+            self.imagen.setEnabled(False)
 
     def LeerLineas(self):
         buscar = QFileDialog.getOpenFileName()
@@ -164,13 +227,94 @@ class Ui_MainWindow(object):
                 
         self.ListaLineas.MostrarDatos()
         self.ListaProductos.MostrarDatos()
+        self.Columnas()
             
+    def Columnas(self):
+        nombreColumnas = []
+        c=0
+        
+        a=self.ListaLineas.Last
+        while a:
+            nombreColumnas.append("Linea "+str(a.Id))
+            a=a.Anterior
+            c=1
+        
+        nombreColumnas.append("Tiempo")
+        self.tbTerreno.setColumnCount(len(nombreColumnas))
+        self.tbTerreno.setColumnWidth(len(nombreColumnas),20)
+        ancho=440//(len(nombreColumnas)-1)-30
+        for x in range(0,len(nombreColumnas)-1):
+            self.tbTerreno.setColumnWidth(x,ancho)
+        self.tbTerreno.setHorizontalHeaderLabels(nombreColumnas)
+
+    def VerInfo(self):
+        nombreSim=self.cmbProducto.currentText()
+        nombreProd=self.cmbProd.currentText()
+        aux=self.ListaSimulaciones.Obtener(nombreProd,nombreSim)
+        if aux!=None:
+            if aux.Procesado==True:
+
+                self.Tiempo.setText(str(aux.TiempoRealizado)+" s")
+                pruebax=self.tbTerreno.rowCount()
+                while pruebax>=0:
+                    self.tbTerreno.removeRow(pruebax)
+                    pruebax-=1
+                self.Columnas()
+                
+                a=aux.NodoAccion
+                print(aux.producto.nombre,aux.TiempoRealizado) 
+                fila=0
+                columna=0
+                c=(int(self.ListaLineas.size))
+                longi=(int(self.ListaLineas.size)+1)*int(aux.TiempoRealizado)
+                while longi>0:
+                    a=aux.NodoAccion
+                    
+                    while a:
+                        if columna==0:
+                                self.tbTerreno.insertRow(fila)
+                                celda=QTableWidgetItem(str(fila+1)+"s")
+                                self.tbTerreno.setItem(fila,c,celda)
+                                columna+=1
+                                c-=1
+                                break
+                        if (fila+1)==int(a.Tiempo) and (columna)==int(a.Linea):
+                            celda=QTableWidgetItem(a.Descripcion)
+                            self.tbTerreno.setItem(fila,c,celda)
+                            
+                            columna+=1
+                            c-=1
+                            if columna>self.ListaLineas.size:
+                                fila+=1
+                                columna=0
+                                c=(int(self.ListaLineas.size))
+                            break
+                        a=a.Next
+                    longi-=1
+
+                    
+            else:
+                msg=QMessageBox()
+                msg.setWindowTitle("OCURRIO UN ERROR")
+                msg.setText("Producto sin procesar")
+                msg.setIcon(QMessageBox.Warning)
+                x=msg.exec_()
+        else:
+            msg=QMessageBox()
+            msg.setWindowTitle("OCURRIO UN ERROR")
+            msg.setText("Producto sin procesar")
+            msg.setIcon(QMessageBox.Warning)
+            x=msg.exec_()
+
+
+
     def LeerSimulacion(self):
         buscar = QFileDialog.getOpenFileName()
         mytree = ET.parse(buscar[0])
         myroot = mytree.getroot()
         nombreSimulacion=myroot[0].text
         self.cmbProducto.addItem(nombreSimulacion)
+        self.procesar.setEnabled(True)
         for x in myroot[1].findall('Producto'):
             nombreP=x.text
             aux=self.ListaProductos.obtener(nombreP)
@@ -184,11 +328,78 @@ class Ui_MainWindow(object):
                 x=msg.exec_()
                 
     def ProcesarSimulacion(self):
+        
         nombre=self.cmbProducto.currentText()
         #aux=self.ListaProductos.obtener()
         self.ListaSimulaciones.Procesar(nombre,self.ListaLineas.size,self.ListaLineas)
+        self.Reporte.setEnabled(True)
         self.ListaSimulaciones.Mostrar()
+        self.cmbProd.clear()
+        nombre=self.cmbProducto.currentText()
+        a=self.ListaSimulaciones.First
+        while a:
+            if nombre==a.nombre:
+                self.cmbProd.addItem(a.producto.nombre)
+            a=a.Next
+        
+        aux=self.ListaProductos.First
+        while aux:
+            a=aux.NodoPieza
+            while a:
+                a.Armado=False
+                a=a.Next
+            aux=aux.Next
+        
+    def InfoSimulacion(self):
+        self.cmbProd.clear()
+        nombre=self.cmbProducto.currentText()
+        a=self.ListaSimulaciones.First
+        while a:
+            if nombre==a.nombre:
+                self.cmbProd.addItem(a.producto.nombre)
+            a=a.Next
+    
+    def Reportar(self):
+        nombre=self.cmbProducto.currentText()
+        self.ListaSimulaciones.imprimirXML(nombre)
 
+    def Imagen(self):
+        nombreSim=self.cmbProducto.currentText()
+        nombreProd=self.cmbProd.currentText()
+        aux=self.ListaSimulaciones.Obtener(nombreProd,nombreSim)
+        if aux!=None:
+            if aux.Procesado==True:
+                archivo=open(aux.nombre+"_"+aux.producto.nombre+".dot","w")
+                archivo.write("digraph "+aux.nombre+"_"+aux.producto.nombre+"{\n")
+                a=aux.producto.NodoPieza
+                while a:
+                    archivo.write(str(a.Id)+"[label="+str(a.nombre)+"]\n")
+                    a=a.Next
+                a=aux.producto.NodoPieza
+                while a.Next:
+                    archivo.write("rankdir=LR{"+str(a.Id)+"->"+str(a.Next.Id)+"}\n")
+                    a=a.Next
+                archivo.write("}")
+                archivo.close()
+                #os.environ["PATH"] += os.pathsep + 'C:/Program Files/Graphviz/bin'
+                os.system('dot -Tpng '+aux.nombre+"_"+aux.producto.nombre+'.dot -o '+aux.nombre+"_"+aux.producto.nombre+'.png')
+                print("Grafico generado :)")
+
+            else:
+                msg=QMessageBox()
+                msg.setWindowTitle("OCURRIO UN ERROR")
+                msg.setText("Producto sin procesar")
+                msg.setIcon(QMessageBox.Warning)
+                x=msg.exec_()
+        else:
+            msg=QMessageBox()
+            msg.setWindowTitle("OCURRIO UN ERROR")
+            msg.setText("Producto sin procesar")
+            msg.setIcon(QMessageBox.Warning)
+            x=msg.exec_()
+        
+        print("imagen")
+        
 
 if __name__ == "__main__":
     import sys
