@@ -11,6 +11,7 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 import xml.etree.ElementTree as ET
 from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QIcon, QPixmap
 from PyQt5.QtWidgets import (QFileDialog, QMessageBox, QApplication, QDialog, QPushButton, QTableWidget,
                              QTableWidgetItem, QAbstractItemView, QHeaderView, QMenu,
                              QActionGroup, QAction)
@@ -53,7 +54,7 @@ class Ui_MainWindow(object):
         self.tbTerreno.setContextMenuPolicy(Qt.CustomContextMenu)
         self.tbTerreno.setWordWrap(False)
 
-        self.tbTerreno.setGeometry(QtCore.QRect(310, 50, 460, 451))
+        self.tbTerreno.setGeometry(QtCore.QRect(310, 50, 460, 301))
         font = QtGui.QFont()
         font.setFamily("Terminal")
         font.setPointSize(10)
@@ -76,6 +77,17 @@ class Ui_MainWindow(object):
         self.info.setObjectName("info")
         self.info.clicked.connect(self.VerInfo)
         self.info.setEnabled(False)
+
+        self.Exportar = QtWidgets.QPushButton(self.centralwidget)
+        self.Exportar.setGeometry(QtCore.QRect(475, 360, 141, 41))
+        font = QtGui.QFont()
+        font.setFamily("Terminal")
+        font.setPointSize(11)
+        self.Exportar.setFont(font)
+        self.Exportar.setObjectName("info")
+        self.Exportar.clicked.connect(self.HTML)
+        self.Exportar.setEnabled(False)
+
 
 
         self.imagen = QtWidgets.QPushButton(self.centralwidget)
@@ -110,6 +122,15 @@ class Ui_MainWindow(object):
         self.Tiempo.setLayoutDirection(QtCore.Qt.RightToLeft)
         self.Tiempo.setTextFormat(QtCore.Qt.PlainText)
         self.Tiempo.setObjectName("Tiempo")
+        
+        self.labelIm = QtWidgets.QLabel(self.centralwidget)
+        self.labelIm.setFont(font)
+        self.labelIm.setLayoutDirection(QtCore.Qt.RightToLeft)
+        self.labelIm.setTextFormat(QtCore.Qt.PlainText)
+        self.labelIm.setObjectName("Tiempo")
+        self.labelIm.setStyleSheet("border: 1px solid black;") 
+        self.labelIm.setGeometry(QtCore.QRect(310, 415, 460, 90))
+
         self.Tiempo_2 = QtWidgets.QLabel(self.centralwidget)
         self.Tiempo_2.setGeometry(QtCore.QRect(20, 160, 271, 31))
         font = QtGui.QFont()
@@ -165,6 +186,7 @@ class Ui_MainWindow(object):
         self.menubar = QtWidgets.QMenuBar(MainWindow)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 800, 21))
         self.menubar.setObjectName("menubar")
+        self.tbTerreno.verticalHeader().setVisible(False)
         MainWindow.setMenuBar(self.menubar)
         self.statusbar = QtWidgets.QStatusBar(MainWindow)
         self.statusbar.setObjectName("statusbar")
@@ -182,7 +204,9 @@ class Ui_MainWindow(object):
         self.info.setText(_translate("MainWindow", "VER INFORMACION"))
         self.imagen.setText(_translate("MainWindow", "GENERAR IMAGEN"))
         self.procesar.setText(_translate("MainWindow", "PROCESAR"))
+        self.Exportar.setText(_translate("MainWindow", "EXPORTAR"))
         self.Tiempo.setText(_translate("MainWindow", "0"))
+        self.labelIm.setText(_translate("MainWindow", ""))
         self.Tiempo_2.setText(_translate("MainWindow", "seleccionar simulacion"))
         self.Tiempo_3.setText(_translate("MainWindow", "tiempo empleado:"))
         self.Tiempo_4.setText(_translate("MainWindow", "DESCRIPCION"))
@@ -191,6 +215,7 @@ class Ui_MainWindow(object):
 
     def Activar(self):
         nombreProd=self.cmbProd.currentText()
+        self.Exportar.setEnabled(False)
         nombreSim=self.cmbProducto.currentText()
         aux=self.ListaSimulaciones.Obtener(nombreProd,nombreSim)
         if aux.Procesado==True:
@@ -229,6 +254,68 @@ class Ui_MainWindow(object):
         self.ListaProductos.MostrarDatos()
         self.Columnas()
             
+    
+    def HTML(self):
+        
+        nombreSim=self.cmbProducto.currentText()
+        nombreProd=self.cmbProd.currentText()
+        file=open(nombreProd+'.html','w')
+        aux=self.ListaSimulaciones.Obtener(nombreProd,nombreSim)
+        contenido="""<!DOCTYPE html>
+    <html lang="en">
+    <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <title>REPORTE</title>
+    </head>
+    <body><center><h1>FABRICACION DE """+aux.producto.nombre+"""</h1>
+    <h2>TIEMPO TOTAL: """+str(aux.TiempoRealizado)+"""</h2>
+    <center>"""
+        contenido+="""<div class="container-table">
+        <div class="table__title">
+            PROCEDIMIENTO
+        </div>
+        """
+        contenido+='<div class="table__header">Segundo</div>'
+        l=1
+        while l<=self.ListaLineas.size:
+            contenido+='<div class="table__header">LINEA '+str(l)+'</div>'
+            l+=1
+        
+        a=aux.NodoAccion
+        if 1==1:        
+            fila=0
+            columna=0
+            longi=(int(self.ListaLineas.size)+1)*int(aux.TiempoRealizado)
+            while longi>0:
+                a=aux.NodoAccion
+                while a:
+                    if columna==0:
+                        contenido+='<div class="table__item">'+str(fila+1)+'</div>'
+                        columna+=1
+                        break
+                    if (fila+1)==int(a.Tiempo) and (columna)==int(a.Linea):
+                        contenido+='<div class="table__item">'+a.Descripcion+'</div>'
+                        columna+=1
+                        if columna>self.ListaLineas.size:
+                            fila+=1
+                            columna=0
+                        break
+                    a=a.Next
+                longi-=1
+        contenido+="</div>"
+        contenido+="""</body>
+        </html>"""
+        try:
+            file.write(contenido)
+        except:
+            print("Ocurrio un error")
+        finally:
+            file.close()
+            webbrowser.open_new_tab(nombreProd+'.html')
+
     def Columnas(self):
         nombreColumnas = []
         c=0
@@ -250,6 +337,7 @@ class Ui_MainWindow(object):
     def VerInfo(self):
         nombreSim=self.cmbProducto.currentText()
         nombreProd=self.cmbProd.currentText()
+        self.Exportar.setEnabled(True)
         aux=self.ListaSimulaciones.Obtener(nombreProd,nombreSim)
         if aux!=None:
             if aux.Procesado==True:
@@ -262,7 +350,7 @@ class Ui_MainWindow(object):
                 self.Columnas()
                 
                 a=aux.NodoAccion
-                print(aux.producto.nombre,aux.TiempoRealizado) 
+                
                 fila=0
                 columna=0
                 c=(int(self.ListaLineas.size))
@@ -291,8 +379,9 @@ class Ui_MainWindow(object):
                             break
                         a=a.Next
                     longi-=1
-
-                    
+                if aux.producto.Imagen:
+                    pixmap = QPixmap(aux.nombre+"_"+aux.producto.nombre+'.png')
+                    self.labelIm.setPixmap(pixmap)   
             else:
                 msg=QMessageBox()
                 msg.setWindowTitle("OCURRIO UN ERROR")
@@ -379,11 +468,14 @@ class Ui_MainWindow(object):
                 while a.Next:
                     archivo.write("rankdir=LR{"+str(a.Id)+"->"+str(a.Next.Id)+"}\n")
                     a=a.Next
+                archivo.write("label="+aux.producto.nombre+"\n")
                 archivo.write("}")
+                
                 archivo.close()
                 #os.environ["PATH"] += os.pathsep + 'C:/Program Files/Graphviz/bin'
                 os.system('dot -Tpng '+aux.nombre+"_"+aux.producto.nombre+'.dot -o '+aux.nombre+"_"+aux.producto.nombre+'.png')
                 print("Grafico generado :)")
+                aux.producto.Imagen=True
 
             else:
                 msg=QMessageBox()

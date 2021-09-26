@@ -53,5 +53,6 @@ class producto:
         self.TiempoE=0
         self.NodoPieza=None         #Nodo que conectara con las piezas de armado
         self.Next=None
+        self.Imagen=False
 
 
